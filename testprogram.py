@@ -54,17 +54,17 @@ data = np.loadtxt(path+fileone)
 
 phrase = data[:,0]
 datay = data[:,1]-np.mean(data[:,1])
-x = np.linspace(0,1,100) #x轴
-sigma = np.diff(datay,2).std()/np.sqrt(6) #估计观测噪声值
+x = np.linspace(0,1,100) 
+sigma = np.diff(datay,2).std()/np.sqrt(6) #Estimated observation noise values
 
 
-###########MCMC参数
+###########MCMCparameters
 nwalkers = 30
 niter = 500
-nburn = 200 #保留最后多少点用于计算
+nburn = 200 #Retain the last number of points for calculation
 index = 0
 
-#初始范围[T/5850，incl/90,q,f,t2t1,l3,offset1, offset2]
+#initial space[T/5850，incl/90,q,f,t2t1,l3,offset1, offset2]
 init_dist = [(5459/5850-0.0001, 5459/5850+0.0001), 
              (54.40/90-6/90, 54.40/90+10/90), 
              (0.5, 3), 
@@ -76,7 +76,7 @@ init_dist = [(5459/5850-0.0001, 5459/5850+0.0001),
              ]
 
 priors=init_dist.copy()
-ndim = len(priors) #维度数
+ndim = len(priors) #Number of dimensions
 
 def predict(allpara):
     
@@ -112,11 +112,11 @@ def getdata(allpara):
     
     return noisy
 
-def rpars(init_dist):#在ndim 维度上，在初始的范围里面均匀撒ndim个点
+def rpars(init_dist):#In the ndim dimension, spread the ndim points evenly over the initial range
     return [np.random.rand() * (i[1]-i[0]) + i[0] for i in init_dist] 
 
 
-def lnprior(priors, values):#判断MCMC新的点是否在初始的区域里面
+def lnprior(priors, values):#Determine if the new MCMC point is inside the initial area
     
     lp = 0.
     for value, prior in zip(values, priors):
@@ -127,9 +127,9 @@ def lnprior(priors, values):#判断MCMC新的点是否在初始的区域里面
     return lp
 
 
-def lnprob(z): #计算后仰概率
+def lnprob(z): #Calculating the posterior probability
     
-    lnp = lnprior(priors,z)#判断MCMC新的点是否在初始的区域里面
+    lnp = lnprior(priors,z)#Determine if the new MCMC point is inside the initial area
 
     if not np.isfinite(lnp):
             return -np.inf
@@ -139,7 +139,7 @@ def lnprob(z): #计算后仰概率
     
     noisy = getdata(z)
     
-    lnp = -0.5*np.sum(np.log(2 * np.pi * sigma ** 2)+(output-noisy)**2/(sigma**2)) #计算似然函数
+    lnp = -0.5*np.sum(np.log(2 * np.pi * sigma ** 2)+(output-noisy)**2/(sigma**2)) #Calculating the likelihood function
       
     return lnp
 
@@ -148,17 +148,17 @@ def run(init_dist, nwalkers, niter,nburn):
     
     ndim = len(init_dist)
     # Generate initial guesses for all parameters for all chains
-    p0 = [rpars(init_dist) for i in range(nwalkers)] #均匀撒ndim*nwalkers点
+    p0 = [rpars(init_dist) for i in range(nwalkers)] 
 
-    sampler = emcee.EnsembleSampler(nwalkers,ndim,lnprob) #建立MCMC模型
-    pos, prob, state = sampler.run_mcmc(p0, niter, progress=True) # 撒点
-    emcee_trace = sampler.chain[:, -nburn:, :].reshape(-1, ndim).T #保留最后nburn 个点做统计
+    sampler = emcee.EnsembleSampler(nwalkers,ndim,lnprob) 
+    pos, prob, state = sampler.run_mcmc(p0, niter, progress=True) 
+    emcee_trace = sampler.chain[:, -nburn:, :].reshape(-1, ndim).T 
 
     return emcee_trace 
 
 t1 = time.time()
 emcee_trace  = run(priors, nwalkers, niter,nburn) #run mcmc
-print('time=',time.time()-t1) #MCMC运行时间
+print('time=',time.time()-t1) 
     
 mu = []
 sigma_1 = []
@@ -178,7 +178,7 @@ sigma_2 = np.array(sigma_2)
 
 
 
-####################绘图
+####################
 
 if index == 1:
     emcee_trace[1,:] = emcee_trace[1,:]*90
@@ -196,8 +196,7 @@ if index == 0:
     
 plt.savefig('corner.png')
 #------------------------------------------------------------
-#用输出值预测理论曲线
-#
+
 pre=predict(mu)
 plt.figure()
 ax = plt.gca()
@@ -213,9 +212,9 @@ noisy = np.interp(x, phrase, datay)
  
 ax.plot(phrase, datay, '.', c = 'b')
 
-ax.plot(x, pre,'-r') #理论数据
-ax.yaxis.set_ticks_position('left') #将y轴的位置设置在右边
-ax.invert_yaxis() #y轴反向
+ax.plot(x, pre,'-r') 
+ax.yaxis.set_ticks_position('left') 
+ax.invert_yaxis() #y-axis reversed
 plt.xlabel('phase',fontsize=18)
 plt.ylabel('mag',fontsize=18)
 
