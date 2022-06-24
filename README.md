@@ -1,5 +1,8 @@
 # MCMC_NN
 
+conda install -c conda-forge emcee
+pip install tensorflow
+python -m pip install corner
 
 Three areas need to be modified when there is a new target：
 
