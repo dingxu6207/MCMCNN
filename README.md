@@ -1,5 +1,7 @@
 # MCMC_NN
 
+filefold is the model trained by corresponding filters
+
 conda install -c conda-forge emcee
 pip install tensorflow
 python -m pip install corner
